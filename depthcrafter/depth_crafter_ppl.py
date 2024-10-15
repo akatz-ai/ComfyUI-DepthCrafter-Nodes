@@ -20,6 +20,10 @@ class DepthCrafterPipeline(StableVideoDiffusionPipeline):
     @classmethod
     def from_pretrained(cls, *args, **kwargs):
         return super().from_pretrained(*args, **kwargs)
+    
+    @classmethod
+    def from_single_file(cls, *args, **kwargs):
+        return super().from_single_file(*args, **kwargs)
 
     @torch.inference_mode()
     def encode_video(
@@ -107,6 +111,7 @@ class DepthCrafterPipeline(StableVideoDiffusionPipeline):
         return_dict: bool = True,
         overlap: int = 25,
         track_time: bool = False,
+        progress_callback: Optional[Callable] = None,
     ):
         """
         :param video: in shape [t, h, w, c] if np.ndarray or [t, c, h, w] if torch.Tensor, in range [0, 1]
@@ -323,6 +328,8 @@ class DepthCrafterPipeline(StableVideoDiffusionPipeline):
                         and (i + 1) % self.scheduler.order == 0
                     ):
                         progress_bar.update()
+                        if progress_callback is not None:
+                            progress_callback(i)
 
             if latents_all is None:
                 latents_all = latents.clone()
@@ -348,6 +355,7 @@ class DepthCrafterPipeline(StableVideoDiffusionPipeline):
             # cast back to fp16 if needed
             if needs_upcasting:
                 self.vae.to(dtype=torch.float16)
+                latents_all = latents_all.to(dtype=torch.float16)
             frames = self.decode_latents(latents_all, num_frames, decode_chunk_size)
 
             if track_time:

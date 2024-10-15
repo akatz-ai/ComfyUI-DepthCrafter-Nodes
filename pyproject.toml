@@ -1,0 +1,15 @@
+[project]
+name = "comfyui-depthcrafter-nodes"
+description = "Implementation of DepthCrafter nodes for ComfyUI, create consistent depth maps for your videos."
+version = "1.0.0"
+license = {file = "LICENSE"}
+dependencies = ["torch", "diffusers", "xformers"]
+
+[project.urls]
+Repository = "https://github.com/akatz-ai/ComfyUI-Depthflow-Nodes"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = "akatz"
+DisplayName = "ComfyUI-Depthflow-Nodes"
+Icon = "https://i.imgur.com/aiqQI7U.png"

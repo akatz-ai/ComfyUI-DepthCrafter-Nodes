@@ -1,80 +1,114 @@
 import os
 import torch
-import numpy as np
-
+import math
 import comfy.model_management as mm
+from comfy.utils import ProgressBar
 import folder_paths
 
-from contextlib import nullcontext
-try:
-    from accelerate import init_empty_weights
-    from accelerate.utils import set_module_tensor_to_device
-    is_accelerate_available = True
-except:
-    is_accelerate_available = False
-    pass
-
-# Include necessary imports from Diffusers and DepthCrafter
-from diffusers import StableDiffusionPipeline
-from diffusers.training_utils import set_seed
-# Make sure to include the custom classes from the DepthCrafter repository
-# You need to copy the 'unet.py' and 'depth_crafter_ppl.py' files from the repository
-# and include them in your project
 from .depthcrafter.unet import DiffusersUNetSpatioTemporalConditionModelDepthCrafter
 from .depthcrafter.depth_crafter_ppl import DepthCrafterPipeline
 
-class DownloadAndLoadDepthCrafterModel:
+class DepthCrafterNode:
+    def __init__(self):
+        self.progress_bar = None
+
+    def start_progress(self, total_steps, desc="Processing"):
+        self.progress_bar = ProgressBar(total_steps)
+
+    def update_progress(self, *args, **kwargs):
+        if self.progress_bar:
+            self.progress_bar.update(1)
+
+    def end_progress(self):
+        self.progress_bar = None
+        
+    CATEGORY = "DepthCrafter"
+
+
+class DownloadAndLoadDepthCrafterModel(DepthCrafterNode):
     @classmethod
     def INPUT_TYPES(s):
         return {"required": {}}
-    
+
     RETURN_TYPES = ("DEPTHCRAFTER_MODEL",)
     RETURN_NAMES = ("depthcrafter_model",)
     FUNCTION = "load_model"
-    CATEGORY = "DepthCrafter"
     DESCRIPTION = """
     Downloads and loads the DepthCrafter model.
     """
-    
+
     def load_model(self):
         device = mm.get_torch_device()
-        
+
         model_dir = os.path.join(folder_paths.models_dir, "depthcrafter")
         os.makedirs(model_dir, exist_ok=True)
-        
+
         # Paths to models
         unet_path = os.path.join(model_dir, "tencent_DepthCrafter")
         pretrain_path = os.path.join(model_dir, "stabilityai_stable-video-diffusion-img2vid-xt")
-        
+
+        depthcrafter_files_to_download = [
+            "config.json",
+            "diffusion_pytorch_model.safetensors",
+        ]
+        svd_files_to_download = [
+            "feature_extractor/preprocessor_config.json",
+            "image_encoder/config.json",
+            "image_encoder/model.fp16.safetensors",
+            "scheduler/scheduler_config.json",
+            "unet/config.json",
+            "unet/diffusion_pytorch_model.fp16.safetensors",
+            "vae/config.json",
+            "vae/diffusion_pytorch_model.fp16.safetensors",
+            "model_index.json",
+        ]
+
+        self.start_progress(len(svd_files_to_download) + len(depthcrafter_files_to_download))
+
         # Check if models exist, if not download them
-        from huggingface_hub import snapshot_download
-        
+        from huggingface_hub import hf_hub_download
+
         if not os.path.exists(unet_path):
             print(f"Downloading UNet model to: {unet_path}")
-            snapshot_download(repo_id="tencent/DepthCrafter", local_dir=unet_path, local_dir_use_symlinks=False)
-        
+            for path in depthcrafter_files_to_download:
+                hf_hub_download(
+                    repo_id="tencent/DepthCrafter",
+                    filename=path,
+                    local_dir=unet_path,
+                    local_dir_use_symlinks=False,
+                    revision="c1a22b53f8abf80cd0b025adf29e637773229eca",
+                )
+                self.update_progress()
+
         if not os.path.exists(pretrain_path):
             print(f"Downloading pre-trained pipeline to: {pretrain_path}")
-            snapshot_download(repo_id="stabilityai/stable-video-diffusion-img2vid-xt", local_dir=pretrain_path, local_dir_use_symlinks=False)
-        
+            for path in svd_files_to_download:
+                hf_hub_download(
+                    repo_id="stabilityai/stable-video-diffusion-img2vid-xt",
+                    filename=path,
+                    local_dir=pretrain_path,
+                    local_dir_use_symlinks=False,
+                    revision="9e43909513c6714f1bc78bcb44d96e733cd242aa",
+                )
+                self.update_progress()
+
         # Load the custom UNet model
         unet = DiffusersUNetSpatioTemporalConditionModelDepthCrafter.from_pretrained(
             unet_path,
             torch_dtype=torch.float16,
-            load_in_8bit=True,
             low_cpu_mem_usage=True,
         )
-        
+
         # Load the pipeline
         pipe = DepthCrafterPipeline.from_pretrained(
             pretrain_path,
             unet=unet,
             torch_dtype=torch.float16,
             variant="fp16",
-            load_in_8bit=True,
+            use_local_files_only=True,
             low_cpu_mem_usage=True,
         )
-        
+
         # Model setup
         try:
             pipe.enable_xformers_memory_efficient_attention()
@@ -82,18 +116,20 @@ class DownloadAndLoadDepthCrafterModel:
             print(e)
             print("Xformers is not enabled")
         pipe.enable_attention_slicing()
-        
+
         # Move to device
         pipe.to(device)
-        
+
         depthcrafter_model = {
             "pipe": pipe,
             "device": device,
         }
-        
+
+        self.end_progress()
+
         return (depthcrafter_model,)
 
-class DepthCrafter:
+class DepthCrafter(DepthCrafterNode):
     @classmethod
     def INPUT_TYPES(s):
         return {"required": {
@@ -109,7 +145,6 @@ class DepthCrafter:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("depth_maps",)
     FUNCTION = "process"
-    CATEGORY = "DepthCrafter"
     DESCRIPTION = """
     Runs the DepthCrafter model on the input images.
     """
@@ -117,8 +152,6 @@ class DepthCrafter:
     def process(self, depthcrafter_model, images, max_res, num_inference_steps, guidance_scale, window_size, overlap):
         device = depthcrafter_model['device']
         pipe = depthcrafter_model['pipe']
-        
-        print(f"images shape: {images.shape}")
         
         B, H, W, C = images.shape
         
@@ -139,7 +172,9 @@ class DepthCrafter:
         images = images.to(device=device, dtype=torch.float16)
         images = torch.clamp(images, 0, 1)
         
-        print(f"images shape: {images.shape}")
+        # Calculate total num of steps
+        num_windows = math.ceil((B - window_size) / (window_size - overlap)) + 1
+        self.start_progress(num_inference_steps * num_windows)
         
         # Run the pipeline
         with torch.inference_mode():
@@ -153,9 +188,9 @@ class DepthCrafter:
                 window_size=window_size,
                 overlap=overlap,
                 track_time=False,
+                progress_callback=self.update_progress,
             )
             
-        print(f"completed depthcrafter result shape: {result.frames[0].shape}")
         res = result.frames[0]  # [B, H, W, C]
         
         # Convert to grayscale depth map
@@ -169,5 +204,7 @@ class DepthCrafter:
         # Convert back to tensor with 3 channels
         depth_maps = res.unsqueeze(-1).repeat(1, 1, 1, 3)  # [t, h, w, 3]
         depth_maps = depth_maps.float()
+        
+        self.end_progress()
         
         return (depth_maps,)

@@ -1,15 +1,15 @@
 """
 @author: akatz
-@title: Depthcrafter Nodes
-@nickname: Depthcrafter Nodes
-@description: Custom nodes for use with DepthCrafter.
+@title: DepthCrafter Nodes
+@nickname: DepthCrafter Nodes
+@description: Custom nodes for use with DepthCrafter. Create consistent depth maps for your videos.
 """
 
 from .nodes import DownloadAndLoadDepthCrafterModel, DepthCrafter
 
 NODE_CONFIG = {
   "DownloadAndLoadDepthCrafterModel": {"class": DownloadAndLoadDepthCrafterModel, "name": "DownloadAndLoadDepthCrafterModel"},
-  "DepthCrafter": {"class": DepthCrafter, "name": "Depthcrafter"},
+  "DepthCrafter": {"class": DepthCrafter, "name": "DepthCrafter"},
 }
 
 def generate_node_mappings(node_config):
