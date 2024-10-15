@@ -6,10 +6,10 @@ license = {file = "LICENSE"}
 dependencies = ["torch", "diffusers", "xformers"]
 
 [project.urls]
-Repository = "https://github.com/akatz-ai/ComfyUI-Depthflow-Nodes"
+Repository = "https://github.com/akatz-ai/ComfyUI-DepthCrafter-Nodes"
 #  Used by Comfy Registry https://comfyregistry.org
 
 [tool.comfy]
 PublisherId = "akatz"
-DisplayName = "ComfyUI-Depthflow-Nodes"
+DisplayName = "ComfyUI-DepthCrafter-Nodes"
 Icon = "https://i.imgur.com/aiqQI7U.png"
