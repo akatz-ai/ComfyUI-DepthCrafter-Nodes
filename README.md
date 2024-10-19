@@ -15,7 +15,7 @@ Original DepthCrafter repo: https://github.com/Tencent/DepthCrafter
   - **max_res**: the maximum resolution of the input images, supports increments of 64 pixels. (Larger resolutions require more VRAM)
   - **max_inference_steps**: more steps may result in less artifacts in the output, but will take longer to render.
   - **guidance_scale**: (1 - 1.2 recommended)
-  - **window_size**: the length of the context window for DepthCrafter. (110 recommended)
+  - **window_size**: the length of the context window for DepthCrafter. You can lower this to save on VRAM at the expense of taking longer to render (75-110 recommended)
   - **overlap**: how much to overlap each context window to render longer videos > 110 frames. (25 recommended)
 
 ## 🔧 Installation and Usage
