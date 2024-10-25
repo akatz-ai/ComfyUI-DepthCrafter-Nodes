@@ -140,6 +140,7 @@ class DepthCrafter(DepthCrafterNode):
             "guidance_scale": ("FLOAT", {"default": 1.2, "min": 0.1, "max": 10.0, "step": 0.1}),
             "window_size": ("INT", {"default": 110, "min": 1, "max": 200}),
             "overlap": ("INT", {"default": 25, "min": 0, "max": 100}),
+            "offload_to_cpu": ("BOOLEAN", {"default": False}),
         }}
     
     RETURN_TYPES = ("IMAGE",)
@@ -149,9 +150,12 @@ class DepthCrafter(DepthCrafterNode):
     Runs the DepthCrafter model on the input images.
     """
     
-    def process(self, depthcrafter_model, images, max_res, num_inference_steps, guidance_scale, window_size, overlap):
+    def process(self, depthcrafter_model, images, max_res, num_inference_steps, guidance_scale, window_size, overlap, offload_to_cpu):
         device = depthcrafter_model['device']
         pipe = depthcrafter_model['pipe']
+        
+        if offload_to_cpu:
+            pipe.enable_model_cpu_offload()
         
         B, H, W, C = images.shape
         
