@@ -28,7 +28,10 @@ class DepthCrafterNode:
 class DownloadAndLoadDepthCrafterModel(DepthCrafterNode):
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": {}}
+        return {"required": {
+            "enable_model_cpu_offload": ("BOOLEAN", {"default": False}),
+            "enable_sequential_cpu_offload": ("BOOLEAN", {"default": False}),
+        }}
 
     RETURN_TYPES = ("DEPTHCRAFTER_MODEL",)
     RETURN_NAMES = ("depthcrafter_model",)
@@ -37,7 +40,7 @@ class DownloadAndLoadDepthCrafterModel(DepthCrafterNode):
     Downloads and loads the DepthCrafter model.
     """
 
-    def load_model(self):
+    def load_model(self, enable_model_cpu_offload, enable_sequential_cpu_offload):
         device = mm.get_torch_device()
 
         model_dir = os.path.join(folder_paths.models_dir, "depthcrafter")
@@ -116,9 +119,15 @@ class DownloadAndLoadDepthCrafterModel(DepthCrafterNode):
             print(e)
             print("Xformers is not enabled")
         pipe.enable_attention_slicing()
+        
+        if enable_model_cpu_offload:
+            pipe.enable_model_cpu_offload()
+            pipe.to(device)
+        elif enable_sequential_cpu_offload:
+            pipe.enable_sequential_cpu_offload()
+        else:
+            pipe.to(device)
 
-        # Move to device
-        pipe.to(device)
 
         depthcrafter_model = {
             "pipe": pipe,
@@ -140,7 +149,6 @@ class DepthCrafter(DepthCrafterNode):
             "guidance_scale": ("FLOAT", {"default": 1.2, "min": 0.1, "max": 10.0, "step": 0.1}),
             "window_size": ("INT", {"default": 110, "min": 1, "max": 200}),
             "overlap": ("INT", {"default": 25, "min": 0, "max": 100}),
-            "offload_to_cpu": ("BOOLEAN", {"default": False}),
         }}
     
     RETURN_TYPES = ("IMAGE",)
@@ -150,12 +158,9 @@ class DepthCrafter(DepthCrafterNode):
     Runs the DepthCrafter model on the input images.
     """
     
-    def process(self, depthcrafter_model, images, max_res, num_inference_steps, guidance_scale, window_size, overlap, offload_to_cpu):
+    def process(self, depthcrafter_model, images, max_res, num_inference_steps, guidance_scale, window_size, overlap):
         device = depthcrafter_model['device']
         pipe = depthcrafter_model['pipe']
-        
-        if offload_to_cpu:
-            pipe.enable_model_cpu_offload()
         
         B, H, W, C = images.shape
         
