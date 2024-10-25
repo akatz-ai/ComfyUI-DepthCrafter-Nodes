@@ -4,6 +4,11 @@
 
 Original DepthCrafter repo: https://github.com/Tencent/DepthCrafter
 
+## Updates:
+(10/25/2024): Added enable_model_cpu_offload and enable_sequential_cpu_offload options to model loader. **Only enable one at a time!**
+- **enable_model_cpu_offload**: Can save +25% of VRAM with little impact to speed by offloading models to cpu when no longer needed for inference.
+- **enable_sequential_cpu_offload**: Can save +37% of VRAM at the expense of slower inference speed by moving all models to CPU.
+
 ## ⭐ Example Workflow:
 <img src="https://i.imgur.com/gtL91SR.png" alt="Description" width="800"/>
 
