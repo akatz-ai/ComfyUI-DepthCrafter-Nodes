@@ -353,9 +353,10 @@ class DepthCrafterPipeline(StableVideoDiffusionPipeline):
 
         if not output_type == "latent":
             # cast back to fp16 if needed
-            if needs_upcasting:
-                self.vae.to(dtype=torch.float16)
-                latents_all = latents_all.to(dtype=torch.float16)
+            # if needs_upcasting:
+            #     self.vae.to(dtype=torch.float16)
+            #     latents_all = latents_all.to(dtype=torch.float16)
+            latents_all = latents_all.to(dtype=self.vae.dtype)
             frames = self.decode_latents(latents_all, num_frames, decode_chunk_size)
 
             if track_time:
