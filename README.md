@@ -4,6 +4,11 @@
 
 Original DepthCrafter repo: https://github.com/Tencent/DepthCrafter
 
+DepthCrafter model download available [here](https://huggingface.co/tencent/DepthCrafter/tree/main)
+(Model license is limited to non-commercial academic use only)
+
+Recommended minimum VRAM: 8GB
+
 ## Updates:
 (11/27/2024): Updated to support DepthCrafter v1.0.1 inference configuration.
 
