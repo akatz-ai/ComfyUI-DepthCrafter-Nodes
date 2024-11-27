@@ -29,7 +29,7 @@ class DownloadAndLoadDepthCrafterModel(DepthCrafterNode):
     @classmethod
     def INPUT_TYPES(s):
         return {"required": {
-            "enable_model_cpu_offload": ("BOOLEAN", {"default": False}),
+            "enable_model_cpu_offload": ("BOOLEAN", {"default": True}),
             "enable_sequential_cpu_offload": ("BOOLEAN", {"default": False}),
         }}
 
@@ -38,6 +38,9 @@ class DownloadAndLoadDepthCrafterModel(DepthCrafterNode):
     FUNCTION = "load_model"
     DESCRIPTION = """
     Downloads and loads the DepthCrafter model.
+    - enable_model_cpu_offload: If True, the model will be offloaded to the CPU. (Saves VRAM)
+    - enable_sequential_cpu_offload: If True, the model will be offloaded to the CPU in a sequential manner. (Saves the most VRAM but runs slowly)
+    Only enable one of the two at a time.
     """
 
     def load_model(self, enable_model_cpu_offload, enable_sequential_cpu_offload):
@@ -122,7 +125,6 @@ class DownloadAndLoadDepthCrafterModel(DepthCrafterNode):
         
         if enable_model_cpu_offload:
             pipe.enable_model_cpu_offload()
-            pipe.to(device)
         elif enable_sequential_cpu_offload:
             pipe.enable_sequential_cpu_offload()
         else:
@@ -144,9 +146,9 @@ class DepthCrafter(DepthCrafterNode):
         return {"required": {
             "depthcrafter_model": ("DEPTHCRAFTER_MODEL", ),
             "images": ("IMAGE", ),
-            "max_res": ("INT", {"default": 512, "min": 0, "max": 4096, "step": 64}),
-            "num_inference_steps": ("INT", {"default": 10, "min": 1, "max": 100}),
-            "guidance_scale": ("FLOAT", {"default": 1.2, "min": 0.1, "max": 10.0, "step": 0.1}),
+            "max_res": ("INT", {"default": 1024, "min": 0, "max": 4096, "step": 64}),
+            "num_inference_steps": ("INT", {"default": 5, "min": 1, "max": 100}),
+            "guidance_scale": ("FLOAT", {"default": 1.0, "min": 0.1, "max": 10.0, "step": 0.1}),
             "window_size": ("INT", {"default": 110, "min": 1, "max": 200}),
             "overlap": ("INT", {"default": 25, "min": 0, "max": 100}),
         }}
