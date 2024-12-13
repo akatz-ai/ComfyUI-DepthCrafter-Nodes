@@ -16,6 +16,16 @@ Recommended minimum VRAM: 8GB
 - **enable_model_cpu_offload**: Can save +25% of VRAM with little impact to speed by offloading models to cpu when no longer needed for inference.
 - **enable_sequential_cpu_offload**: Can save +37% of VRAM at the expense of slower inference speed by moving all models to CPU.
 
+## 🖥️ Custom Environment
+I created a custom ComfyUI environment for testing out DepthCrafter nodes:
+
+**akatzai/comfy-env-depthcrafter:latest**
+
+Create a new environment and copy and paste the link above into the "Custom Image" field in my Environment Manager tool:
+https://github.com/akatz-ai/ComfyUI-Environment-Manager
+
+Make sure to select the **Basic** environment type to access the included workflow!
+
 ## ⭐ Example Workflow:
 <img src="https://i.imgur.com/gtL91SR.png" alt="Description" width="800"/>
 
