@@ -146,7 +146,7 @@ class DepthCrafter(DepthCrafterNode):
         return {"required": {
             "depthcrafter_model": ("DEPTHCRAFTER_MODEL", ),
             "images": ("IMAGE", ),
-            "max_res": ("INT", {"default": 1024, "min": 0, "max": 4096, "step": 64}),
+            "force_size": ("BOOLEAN", {"default": True}),
             "num_inference_steps": ("INT", {"default": 5, "min": 1, "max": 100}),
             "guidance_scale": ("FLOAT", {"default": 1.0, "min": 0.1, "max": 10.0, "step": 0.1}),
             "window_size": ("INT", {"default": 110, "min": 1, "max": 200}),
@@ -158,27 +158,58 @@ class DepthCrafter(DepthCrafterNode):
     FUNCTION = "process"
     DESCRIPTION = """
     Runs the DepthCrafter model on the input images.
+    **WARNING:** The model internally requires image dimensions (width and height)
+    to be multiples of 64. Enable 'force_size' to automatically resize the input
+    to the nearest valid dimensions, or ensure your input images already meet
+    this requirement if 'force_size' is disabled.
     """
     
-    def process(self, depthcrafter_model, images, max_res, num_inference_steps, guidance_scale, window_size, overlap):
+    def process(self, depthcrafter_model, images, force_size, num_inference_steps, guidance_scale, window_size, overlap):
         device = depthcrafter_model['device']
         pipe = depthcrafter_model['pipe']
         
         B, H, W, C = images.shape
-        
-        # Round to nearest multiple of 64
-        width = round(W / 64) * 64
-        height = round(H / 64) * 64
-        
-        # Scale images if necessary
-        max_dim = max(height, width)
-        if max_dim > max_res:
-            scale_factor = max_res / max_dim
-            height = round(H * scale_factor / 64) * 64
-            width = round(W * scale_factor / 64) * 64
-            images = torch.nn.functional.interpolate(images.permute(0, 3, 1, 2), size=(height, width), mode='bilinear', align_corners=False).permute(0, 2, 3, 1)
-        
-        # Permute images to [t, c, h, w]
+        orig_H, orig_W = H, W
+
+        if force_size:
+            # Round to nearest multiple of 64
+            width = round(W / 64) * 64
+            height = round(H / 64) * 64
+            # Ensure minimum size is 64
+            width = max(64, width)
+            height = max(64, height)
+
+            if width != W or height != H:
+                print(f"DepthCrafter: Resizing input from {W}x{H} to {width}x{height} (multiples of 64)")
+                # Permute for interpolation: B, H, W, C -> B, C, H, W
+                images_for_resize = images.permute(0, 3, 1, 2)
+                images_resized = torch.nn.functional.interpolate(
+                    images_for_resize,
+                    size=(height, width),
+                    mode='bilinear',
+                    align_corners=False
+                )
+                # Permute back: B, C, H, W -> B, H, W, C
+                images = images_resized.permute(0, 2, 3, 1)
+                # Update H, W to the new dimensions
+                H, W = height, width
+            else:
+                # Dimensions are already multiples of 64 or rounding didn't change them
+                width = W
+                height = H
+        else:
+            # Check if dimensions are multiples of 64
+            if W % 64 != 0 or H % 64 != 0:
+                raise ValueError(
+                    f"Input image dimensions ({W}x{H}) are not multiples of 64. "
+                    f"Please resize your image to a multiple of 64 (e.g., {round(W / 64) * 64}x{round(H / 64) * 64}) "
+                    f"or enable the 'force_size' option."
+                )
+            # Use original dimensions if they are valid
+            width = W
+            height = H
+
+        # Permute images to [t, c, h, w] for the pipeline
         images = images.permute(0, 3, 1, 2)  # [B, C, H, W]
         images = images.to(device=device, dtype=torch.float16)
         images = torch.clamp(images, 0, 1)
@@ -205,7 +236,7 @@ class DepthCrafter(DepthCrafterNode):
         res = result.frames[0]  # [B, H, W, C]
         
         # Convert to grayscale depth map
-        res = res.sum(dim=1) / res.shape[1]  # [t, h, w]
+        res = res.sum(dim=1) / res.shape[1]  # [B, H, W]
         
         # Normalize depth maps
         res_min = res.min()
@@ -213,7 +244,7 @@ class DepthCrafter(DepthCrafterNode):
         res = (res - res_min) / (res_max - res_min + 1e-8)
         
         # Convert back to tensor with 3 channels
-        depth_maps = res.unsqueeze(-1).repeat(1, 1, 1, 3)  # [t, h, w, 3]
+        depth_maps = res.unsqueeze(-1).repeat(1, 1, 1, 3)  # [B, H, W, 3]
         depth_maps = depth_maps.float()
         
         self.end_progress()
