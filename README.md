@@ -27,7 +27,8 @@ https://github.com/akatz-ai/ComfyUI-Environment-Manager
 Make sure to select the **Basic** environment type to access the included workflow!
 
 ## ⭐ Example Workflow:
-![depthcrafter](https://github.com/user-attachments/assets/4c723eca-a92a-4658-aa97-352d5ec5acf7)
+![depthcrafter](https://github.com/user-attachments/assets/d7e50363-b489-4c01-8e52-c7f654cdd37a)
+
 
 
 ## 📦 Included Nodes:
