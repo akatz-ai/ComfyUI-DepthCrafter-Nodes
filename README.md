@@ -27,7 +27,8 @@ https://github.com/akatz-ai/ComfyUI-Environment-Manager
 Make sure to select the **Basic** environment type to access the included workflow!
 
 ## ⭐ Example Workflow:
-<img src="https://i.imgur.com/gtL91SR.png" alt="Description" width="800"/>
+![depthcrafterScreen](https://github.com/user-attachments/assets/21352949-6c75-41c3-ba65-70012a2a1965)
+
 
 ## 📦 Included Nodes:
 - **DownloadAndLoadDepthCrafterModel**: Will fetch the model files need to run DepthCrafter and save them under models/depthcrafter.
