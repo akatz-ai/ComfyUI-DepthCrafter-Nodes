@@ -10,6 +10,10 @@ DepthCrafter model download available [here](https://huggingface.co/tencent/Dept
 Recommended minimum VRAM: 8GB
 
 ## Updates:
+(04/04/2025): Replaced **max_size** with **force_rate** parameter to automatically attempt re-sizing input resolution to match closest multiple of 64.
+- Updated requirements.txt with accelerate
+- Added warning message in node description about 64 pixel resolution multiple constraint.
+
 (11/27/2024): Updated to support DepthCrafter v1.0.1 inference configuration.
 
 (10/25/2024): Added enable_model_cpu_offload and enable_sequential_cpu_offload options to model loader. **Only enable one at a time!**
