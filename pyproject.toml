@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-depthcrafter-nodes"
 description = "Implementation of DepthCrafter nodes for ComfyUI, create consistent depth maps for your videos."
-version = "1.1.2"
+version = "1.2.0"
 license = {file = "LICENSE"}
 dependencies = ["torch", "diffusers>=0.29.1", "accelerate>=0.17.0"]
 
