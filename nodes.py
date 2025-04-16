@@ -116,11 +116,11 @@ class DownloadAndLoadDepthCrafterModel(DepthCrafterNode):
         )
 
         # Model setup
-        try:
-            pipe.enable_xformers_memory_efficient_attention()
-        except Exception as e:
-            print(e)
-            print("Xformers is not enabled")
+        # try:
+        #     pipe.enable_xformers_memory_efficient_attention()
+        # except Exception as e:
+        #     print(e)
+        #     print("Xformers is not enabled")
         pipe.enable_attention_slicing()
         
         if enable_model_cpu_offload:
