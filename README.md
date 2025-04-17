@@ -11,6 +11,7 @@ Recommended minimum VRAM: 8GB
 
 ## Updates:
 (04/16/2025): Disabled forced xFormers in model loading stage to prevent issues with higher dimension inputs (e.g. 960x960) from hitting batch size cap.
+
 (04/04/2025): Replaced **max_size** with **force_rate** parameter to automatically attempt re-sizing input resolution to match closest multiple of 64.
 - Updated requirements.txt with accelerate
 - Added warning message in node description about 64 pixel resolution multiple constraint.
