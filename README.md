@@ -61,3 +61,44 @@ Make sure to select the **Basic** environment type to access the included workfl
 git clone https://github.com/akatz-ai/ComfyUI-DepthCrafter-Nodes.git
 ```
 - Restart ComfyUI
+
+## Manual Model Installation
+
+If you have trouble using the automatic download feature of the "DownloadAndLoadDepthCrafterModel" node, you can manually download the necessary files like so:
+1. Create the model directories for Depthcrafter:
+   - In your models/ folder you should create a new directory called depthcrafter/
+   - Inside of models/depthcrafter/ you should create 2 additional directories called tencent_DepthCrafter/ and stabilityai_stable-video-diffusion-img2vid-xt/
+
+Result:
+
+    models/
+    
+      depthcrafter/
+      
+        tencent_DepthCrafter/
+        
+        stabilityai_stable-video-diffusion-img2vid-xt/
+
+2. Now navigate to https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt/tree/main
+   - Download the following files and directories and place them inside of model/depthcrafter/stabilityai_stable-video-diffusion-img2vid-xt/:
+     ```
+      "feature_extractor/preprocessor_config.json",
+      "image_encoder/config.json",
+      "image_encoder/model.fp16.safetensors",
+      "scheduler/scheduler_config.json",
+      "unet/config.json",
+      "unet/diffusion_pytorch_model.fp16.safetensors",
+      "vae/config.json",
+      "vae/diffusion_pytorch_model.fp16.safetensors",
+      "model_index.json",
+     ```
+
+3. Navigate to https://huggingface.co/tencent/DepthCrafter/tree/main:
+   - Download the following files and place the inside of model/depthcrafter/tencent_DepthCrafter/:
+     ```
+     config.json
+     diffusion_pytorch_model.safetensors
+     ```
+
+After running the node with the above files and directories installed you should be able to run DepthCrafter.
+
