@@ -82,16 +82,17 @@ Result:
 2. Now navigate to https://huggingface.co/stabilityai/stable-video-diffusion-img2vid-xt/tree/main
    - Download the following files and directories and place them inside of model/depthcrafter/stabilityai_stable-video-diffusion-img2vid-xt/:
      ```
-      "feature_extractor/preprocessor_config.json",
-      "image_encoder/config.json",
-      "image_encoder/model.fp16.safetensors",
-      "scheduler/scheduler_config.json",
-      "unet/config.json",
-      "unet/diffusion_pytorch_model.fp16.safetensors",
-      "vae/config.json",
-      "vae/diffusion_pytorch_model.fp16.safetensors",
-      "model_index.json",
+      feature_extractor/preprocessor_config.json,
+      image_encoder/config.json,
+      image_encoder/model.fp16.safetensors,
+      scheduler/scheduler_config.json,
+      unet/config.json,
+      unet/diffusion_pytorch_model.fp16.safetensors,
+      vae/config.json,
+      vae/diffusion_pytorch_model.fp16.safetensors,
+      model_index.json,
      ```
+     *** Note: Make sure you actually have/create the subdirectories feature_extractor/, image_encoder/, scheduler/, unet/, and vae/ for the files above! ***
 
 3. Navigate to https://huggingface.co/tencent/DepthCrafter/tree/main:
    - Download the following files and place the inside of model/depthcrafter/tencent_DepthCrafter/:
